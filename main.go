@@ -69,7 +69,7 @@ func main() {
 	s += "\n]"
 
 	if outFile != "" {
-		err = ioutil.WriteFile(outFile, []byte(data), 0644)
+		err = ioutil.WriteFile(outFile, []byte(s), 0644)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
