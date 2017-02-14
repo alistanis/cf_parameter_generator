@@ -55,12 +55,15 @@ func main() {
 
 	s := "[\n"
 
-	for _, k := range keys {
+	for i, k := range keys {
 		s += fmt.Sprintf(`	{
 		"ParameterKey": "%s",
 		"ParameterValue": ""
-	},
-`, k)
+	}`, k)
+		if i != len(keys)-1 {
+			s += `,
+`
+		}
 	}
 
 	s += "\n]"
