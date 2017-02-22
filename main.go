@@ -8,7 +8,10 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
+
+	"reflect"
 
 	"gopkg.in/yaml.v2"
 )
@@ -55,8 +58,12 @@ func main() {
 	if _, ok := m["Parameters"]; !ok {
 		exitError(errors.New("Parameters not found in file."))
 	}
-
-	params := m["Parameters"].(map[string]interface{})
+	params := make(map[string]interface{})
+	if inyaml {
+		recurseMapInterface(m["Parameters"].(map[interface{}]interface{}), params)
+	} else {
+		params = m["Parameters"].(map[string]interface{})
+	}
 
 	pl := make(paramList, 0)
 
@@ -172,4 +179,73 @@ func (p paramList) Len() int {
 func exitError(err error) {
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(-1)
+}
+
+func recurseMapInterface(m map[interface{}]interface{}, newMap map[string]interface{}) {
+	nm := make(map[string]interface{})
+	for k, v := range m {
+		nk := ""
+		switch t := k.(type) {
+		case string:
+			nk = t
+		case int:
+			nk = strconv.Itoa(t)
+		case float64:
+			nk = strconv.FormatFloat(t, 'E', -1, 64)
+		case map[interface{}]interface{}:
+			recurseMapInterface(t, newMap)
+		}
+
+		var nv interface{}
+		switch t := v.(type) {
+		case map[interface{}]interface{}:
+			m := make(map[string]interface{})
+			nm[nk] = m
+			recurseMapInterface(t, m)
+		case []interface{}:
+			recurseArray(nk, t, nm)
+		default:
+			nv = t
+		}
+		if nv != nil {
+			nm[nk] = nv
+		}
+	}
+
+	for k, v := range nm {
+		newMap[k] = v
+	}
+
+}
+
+func recurseArray(k string, slc []interface{}, container interface{}) {
+	nslc := make([]interface{}, 0)
+	for _, i := range slc {
+		var v interface{}
+		switch i := i.(type) {
+		case []interface{}:
+			recurseArray(k, i, &nslc)
+		case map[interface{}]interface{}:
+			m := make(map[string]interface{})
+			nslc = append(nslc, m)
+			recurseMapInterface(i, m)
+		default:
+			v = i
+		}
+		if v != nil {
+			nslc = append(nslc, v)
+		}
+	}
+
+	rv := reflect.ValueOf(container)
+	if rv.Kind() == reflect.Ptr {
+		rv = reflect.Indirect(rv)
+	}
+	switch rv.Kind() {
+	case reflect.Slice:
+		*container.(*[]interface{}) = append(*container.(*[]interface{}), nslc)
+	case reflect.Map:
+		m := container.(map[string]interface{})
+		m[k] = nslc
+	}
 }
