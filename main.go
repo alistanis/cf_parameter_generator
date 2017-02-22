@@ -6,7 +6,7 @@ import (
 
 	"flag"
 
-	"github.com/alistanis/cf_parameter_generator"
+	"github.com/alistanis/cf_parameter_generator/lib"
 )
 
 var (
