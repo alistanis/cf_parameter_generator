@@ -30,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	if inFile == "" {
-		fmt.Fprintln(os.Stderr, "Missing required argument -f")
+		exitError(errors.New("Missing required argument -f"))
 	}
 
 	m := make(map[string]interface{})
@@ -57,7 +57,6 @@ func main() {
 	}
 
 	sort.Sort(pl)
-
 	data, err = marshal(pl)
 	if err != nil {
 		exitError(err)
@@ -98,6 +97,7 @@ func (p paramList) Swap(i, j int) {
 func (p paramList) Len() int {
 	return len(p)
 }
+
 
 func exitError(err error) {
 	fmt.Fprintln(os.Stderr, err)
