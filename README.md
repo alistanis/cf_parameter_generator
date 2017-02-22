@@ -3,6 +3,26 @@ Do you need to write a ton of CloudFormation instead of Terraform for some reaso
 
 ## Examples
 
+Usage
+
+    cf_parameter_generator --help
+    Usage of cf_parameter_generator:
+      -f string
+        	The file to read from to generate parameters.
+      -inyaml
+        	Will expect input as yaml instead of json.
+      -min
+        	If given, will generate minified output.
+      -o string
+        	Optional: Specify a file name to write out parameters.
+      -outyaml
+        	Will output in yaml instead of json.
+      -overwrite
+        	By default, will update an existing parameters file with newly found parameters, but will not overwrite.
+      -r	Removes old entries from parameters found in old parameters files.
+      -spaces int
+        	The number of spaces used to indent the file if not generating minified output. (default 2)
+
 Printing output to command line:
 
     $ cf_parameter_generator -f /Users/cmc/some_cf_file.json
