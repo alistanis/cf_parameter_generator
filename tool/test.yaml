@@ -1,0 +1,37 @@
+Parameters:
+  AWSAccount:
+    AllowedValues:
+    - admints-dev
+    - admints
+    Default: admints-dev
+    Description: Name of the AWS Account
+    Type: String
+  AmazonEC2FullAccessARN:
+    Default: arn:aws:iam::aws:policy/AmazonEC2FullAccess
+    Description: The ARN of a policy granting 'full access' rights to EC2
+    Type: String
+  AmazonRoute53FullAccessARN:
+    Default: arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+    Description: The ARN of a policy granting 'full access' rights to Route53
+    Type: String
+  AppTierFleetSize:
+    AllowedValues:
+    - 3
+    ConstraintDescription: Must be a valid value.
+    Default: 3
+    Description: App Tier Fleet Size
+    Type: Number
+  AppTierInstanceType:
+    AllowedValues:
+    - t2.medium
+    - t2.large
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.8xlarge
+    ConstraintDescription: 'Must be a valid EC2 instance type. NOTE: use t2.medium
+      for stack testing only.'
+    Default: m4.large
+    Description: 'App tier instance type.  NOTE: use t2.medium for stack testing only.'
+    Type: String

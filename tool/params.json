@@ -1,0 +1,34 @@
+[
+  {
+    "ParameterKey": "AccessControl",
+    "ParameterValue": "Private"
+  },
+  {
+    "ParameterKey": "ApplicationName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "AssetID",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "LifecycleConfigurationStatus",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "NoncurrentVersionExpirationInDays",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "TestExtraParam",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "VersioningConfigurationStatus",
+    "ParameterValue": ""
+  }
+]

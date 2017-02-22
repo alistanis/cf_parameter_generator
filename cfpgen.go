@@ -1,4 +1,4 @@
-package main
+package cfpgen
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,50 +16,44 @@ import (
 )
 
 var (
-	inFile                       string
-	outFile                      string
-	min                          bool
-	numIndentSpaces              int
-	overwrite                    bool
-	removeOldParamsNotInTemplate bool
-	oyaml                        bool
-	inyaml                       bool
+	ErrMissingInFile     = errors.New("Missing required argument -f")
+	ErrMissingParameters = errors.New("Parameters not found in file")
 )
 
-func init() {
-	flag.StringVar(&inFile, "f", "", "The file to read from to generate parameters.")
-	flag.StringVar(&outFile, "o", "", "Optional: Specify a file name to write out parameters.")
-	flag.BoolVar(&min, "min", false, "If given, will generate minified output.")
-	flag.IntVar(&numIndentSpaces, "spaces", 2, "The number of spaces used to indent the file if not generating minified output.")
-	flag.BoolVar(&overwrite, "overwrite", false, "By default, will update an existing parameters file with newly found parameters, but will not overwrite.")
-	flag.BoolVar(&removeOldParamsNotInTemplate, "r", false, "Removes old entries from parameters found in old parameters files.")
-	flag.BoolVar(&oyaml, "outyaml", false, "Will output in yaml instead of json.")
-	flag.BoolVar(&inyaml, "inyaml", false, "Will expect input as yaml instead of json.")
+type Config struct {
+	InFile                       string
+	OutFile                      string
+	Minimize                     bool
+	Indent                       int
+	Overwrite                    bool
+	RemoveOldParamsNotInTemplate bool
+	OutYaml                      bool
+	InYaml                       bool
 }
 
-func main() {
+func Run(c *Config) error {
 	flag.Parse()
 
-	if inFile == "" {
-		exitError(errors.New("Missing required argument -f"))
+	if c.InFile == "" {
+		return ErrMissingInFile
 	}
 
 	m := make(map[string]interface{})
-	data, err := ioutil.ReadFile(inFile)
+	data, err := ioutil.ReadFile(c.InFile)
 	if err != nil {
-		exitError(err)
+		return err
 	}
-	err = unmarshal(data, &m)
+	err = unmarshal(data, &m, c)
 	if err != nil {
-		exitError(err)
+		return err
 	}
 
 	if _, ok := m["Parameters"]; !ok {
-		exitError(errors.New("Parameters not found in file."))
+		return ErrMissingParameters
 	}
 	params := make(map[string]interface{})
-	if inyaml {
-		recurseMapInterface(m["Parameters"].(map[interface{}]interface{}), params)
+	if c.InYaml {
+		RecurseMapInterface(m["Parameters"].(map[interface{}]interface{}), params)
 	} else {
 		params = m["Parameters"].(map[string]interface{})
 	}
@@ -73,19 +66,19 @@ func main() {
 	}
 
 	sort.Sort(pl)
-	data, err = marshal(pl)
+	data, err = marshal(pl, c)
 	if err != nil {
-		exitError(err)
+		return err
 	}
-	if outFile != "" {
-		if !overwrite {
-			odata, err := ioutil.ReadFile(outFile)
+	if c.OutFile != "" {
+		if !c.Overwrite {
+			odata, err := ioutil.ReadFile(c.OutFile)
 			if err == nil {
 				// original param list
 				opl := make(paramList, 0)
-				err = unmarshal(odata, &opl)
+				err = unmarshal(odata, &opl, c)
 				if err != nil {
-					exitError(err)
+					return err
 				}
 				//new values from template
 				for _, nv := range pl {
@@ -102,7 +95,7 @@ func main() {
 					}
 				}
 
-				if removeOldParamsNotInTemplate {
+				if c.RemoveOldParamsNotInTemplate {
 					//new values from template
 				outer:
 					for i := 0; i < len(opl); i++ {
@@ -123,35 +116,35 @@ func main() {
 					}
 				}
 				sort.Sort(opl)
-				data, err = marshal(opl)
+				data, err = marshal(opl, c)
 				if err != nil {
-					exitError(err)
+					return err
 				}
 			}
 		}
 
-		err = ioutil.WriteFile(outFile, data, 0644)
+		err = ioutil.WriteFile(c.OutFile, data, 0644)
 		if err != nil {
-			exitError(err)
+			return err
 		}
 	} else {
 		fmt.Print(string(data))
 	}
-
+	return nil
 }
 
-func marshal(i interface{}) ([]byte, error) {
-	if oyaml {
+func marshal(i interface{}, c *Config) ([]byte, error) {
+	if c.OutYaml {
 		return yaml.Marshal(i)
 	}
-	if min {
+	if c.Minimize {
 		return json.Marshal(i)
 	}
-	return json.MarshalIndent(i, "", strings.Repeat(" ", numIndentSpaces))
+	return json.MarshalIndent(i, "", strings.Repeat(" ", c.Indent))
 }
 
-func unmarshal(data []byte, i interface{}) error {
-	if inyaml {
+func unmarshal(data []byte, i interface{}, c *Config) error {
+	if c.InYaml {
 		return yaml.Unmarshal(data, i)
 	}
 	return json.Unmarshal(data, i)
@@ -176,12 +169,7 @@ func (p paramList) Len() int {
 	return len(p)
 }
 
-func exitError(err error) {
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(-1)
-}
-
-func recurseMapInterface(m map[interface{}]interface{}, newMap map[string]interface{}) {
+func RecurseMapInterface(m map[interface{}]interface{}, newMap map[string]interface{}) {
 	nm := make(map[string]interface{})
 	for k, v := range m {
 		nk := ""
@@ -193,7 +181,7 @@ func recurseMapInterface(m map[interface{}]interface{}, newMap map[string]interf
 		case float64:
 			nk = strconv.FormatFloat(t, 'E', -1, 64)
 		case map[interface{}]interface{}:
-			recurseMapInterface(t, newMap)
+			RecurseMapInterface(t, newMap)
 		}
 
 		var nv interface{}
@@ -201,9 +189,9 @@ func recurseMapInterface(m map[interface{}]interface{}, newMap map[string]interf
 		case map[interface{}]interface{}:
 			m := make(map[string]interface{})
 			nm[nk] = m
-			recurseMapInterface(t, m)
+			RecurseMapInterface(t, m)
 		case []interface{}:
-			recurseArray(nk, t, nm)
+			RecurseArray(nk, t, nm)
 		default:
 			nv = t
 		}
@@ -218,17 +206,17 @@ func recurseMapInterface(m map[interface{}]interface{}, newMap map[string]interf
 
 }
 
-func recurseArray(k string, slc []interface{}, container interface{}) {
+func RecurseArray(k string, slc []interface{}, container interface{}) {
 	nslc := make([]interface{}, 0)
 	for _, i := range slc {
 		var v interface{}
 		switch i := i.(type) {
 		case []interface{}:
-			recurseArray(k, i, &nslc)
+			RecurseArray(k, i, &nslc)
 		case map[interface{}]interface{}:
 			m := make(map[string]interface{})
 			nslc = append(nslc, m)
-			recurseMapInterface(i, m)
+			RecurseMapInterface(i, m)
 		default:
 			v = i
 		}

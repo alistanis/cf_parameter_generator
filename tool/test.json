@@ -1,0 +1,164 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "S3 Enforce Server Side Encryption Stack",
+
+  "Parameters": {
+    "AccessControl": {
+      "Default": "Private",
+      "Type": "String",
+      "Description": "The ACL to apply to this S3 bucket.",
+      "AllowedValues": [ "Private",
+        "PublicRead",
+        "PublicReadWrite",
+        "AuthenticatedRead",
+        "LogDeliveryWrite",
+        "BucketOwnerRead",
+        "BucketOwnerFullControl"
+      ]
+    },
+    "VersioningConfigurationStatus": {
+      "Type": "String",
+      "Default": "Enabled",
+      "Description": "Whether or not to enable versioning on this bucket",
+      "AllowedValues": [
+        "Enabled",
+        "Suspended"
+      ]
+    },
+    "LifecycleConfigurationStatus": {
+      "Type": "String",
+      "Default": "Enabled",
+      "Description": "Enables or disables lifecycle configuration",
+      "AllowedValues": [
+        "Enabled",
+        "Disabled"
+      ]
+    },
+    "NoncurrentVersionExpirationInDays": {
+      "Type": "Number",
+      "Description": "For buckets with versioning enabled (or suspended), specifies the time, in days, between when a new version of the object is uploaded to the bucket and when old versions of the object expire. When object versions expire, Amazon S3 permanently deletes them. If you specify a transition and expiration time, the expiration time must be later than the transition time.",
+      "Default": 30
+    },
+    "ApplicationName": {
+      "Type": "String",
+      "Description": "The name of this application"
+    },
+    "Environment": {
+      "Type": "String",
+      "Description": "The deployment environment for this application",
+      "Default": "dev",
+      "AllowedValues": [
+        "dev",
+        "test",
+        "int",
+        "stage",
+        "prod",
+        "prod1",
+        "prod2"
+      ]
+    },
+    "AssetID": {
+      "Type": "String",
+      "Description": "The HUIT asset ID for this application"
+    }
+  },
+
+  "Resources" : {
+    "S3Bucket": { "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "AccessControl" : {"Ref": "AccessControl"},
+        "BucketName" : {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "ApplicationName"
+              },
+              "-",
+              {
+                "Ref": "Environment"
+              },
+              "-bucket"
+            ]
+          ]},
+        "LifecycleConfiguration" : {
+          "Rules": [
+            {"NoncurrentVersionExpirationInDays": {"Ref": "NoncurrentVersionExpirationInDays"},
+              "Status": {"Ref": "LifecycleConfigurationStatus"}
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ApplicationName"
+                  },
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  },
+                  "-bucket"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "environment",
+            "Value": {"Ref": "Environment"}
+
+          },
+          {
+            "Key": "product",
+            "Value": {"Ref": "ApplicationName"}
+          },
+          {
+            "Key": "huit_assetid",
+            "Value": {"Ref": "AssetID"}
+          }
+        ],
+        "VersioningConfiguration" : {
+          "Status": {"Ref": "VersioningConfigurationStatus"}
+        }
+      }
+    },
+    "BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": { "Ref": "S3Bucket" },
+        "PolicyDocument": {
+          "Version":"2012-10-17",
+          "Id":"PutObjPolicy",
+          "Statement": [
+            {
+              "Sid": "DenyUnEncryptedObjectUploads",
+              "Action": ["s3:PutObject"],
+              "Effect": "Deny",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:s3:::",
+                    {"Ref": "S3Bucket"},
+                    "/*"
+                  ]
+                ]
+              },
+              "Condition": {
+                "StringNotEquals": {
+                  "s3:x-amz-server-side-encryption": "aws:kms"
+                }
+              },
+              "Principal": "*"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
