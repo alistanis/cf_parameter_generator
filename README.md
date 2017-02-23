@@ -8,7 +8,7 @@ Get it: `go get -u github.com/alistanis/cf_parameter_generator ./...`
 Usage
 
     cf_parameter_generator --help
-    sage of cf_parameter_generator:
+    Usage of cf_parameter_generator:
       -f string
         	The file to read from to generate parameters.
       -inyaml
@@ -25,6 +25,8 @@ Usage
       -spaces int
         	The number of spaces used to indent the file if not generating minified output. (default 2)
       -v	Places verbose output in the ParameterValue field to be replaced.
+      -version
+        	Print the version and exits.
 
 Printing output to command line:
 
