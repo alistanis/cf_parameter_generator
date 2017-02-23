@@ -22,6 +22,7 @@ var (
 	ErrMissingParameters = errors.New("Parameters not found in file")
 )
 
+// Config represents a config struct holding information about how to format output and where to write said output
 type Config struct {
 	InFile                       string
 	OutFile                      string
@@ -34,7 +35,7 @@ type Config struct {
 	Verbose                      bool
 }
 
-// TODO - refactor this into smaller functions
+// Generate generates a cloud formation parameters file template and writes either to a file or stdout
 func Generate(c *Config) error {
 	flag.Parse()
 
@@ -47,7 +48,7 @@ func Generate(c *Config) error {
 	if err != nil {
 		return err
 	}
-	err = unmarshal(data, &m, c)
+	err = c.unmarshal(data, &m)
 	if err != nil {
 		return err
 	}
@@ -62,6 +63,17 @@ func Generate(c *Config) error {
 		params = m["Parameters"].(map[string]interface{})
 	}
 
+	pl, err := c.GetParamList(params)
+	if err != nil {
+		return err
+	}
+	sort.Sort(pl)
+
+	return c.ProcessPL(pl)
+}
+
+// GetParamList takes the given config and generates a paramList ([]parameter)
+func (c *Config) GetParamList(params map[string]interface{}) (paramList, error) {
 	pl := make(paramList, 0)
 
 	for k := range params {
@@ -83,25 +95,25 @@ func Generate(c *Config) error {
 				if ok {
 					p.AllowedValues = v
 				} else {
-					return errors.New("AllowedValues was not an []interface{}")
+					return nil, errors.New("AllowedValues was not an []interface{}")
 				}
 			case "Description":
 				if s, ok := v.(string); ok {
 					p.Description = s
 				} else {
-					return errors.New("Description was not a string")
+					return nil, errors.New("Description was not a string")
 				}
 			case "Type":
 				if s, ok := v.(string); ok {
 					p.Type = s
 				} else {
-					return errors.New("Type was not a string")
+					return nil, errors.New("Type was not a string")
 				}
 			case "AllowedPattern":
 				if s, ok := v.(string); ok {
 					p.AllowedPattern = s
 				} else {
-					return errors.New("AllowedPattern was not a string")
+					return nil, errors.New("AllowedPattern was not a string")
 				}
 			}
 		}
@@ -127,9 +139,12 @@ func Generate(c *Config) error {
 		}
 		pl[i].ParameterValue = s
 	}
+	return pl, nil
+}
 
-	sort.Sort(pl)
-	data, err = marshal(pl, c)
+// ProcessPL processes a paramList and writes to a file or stdout
+func (c *Config) ProcessPL(pl paramList) error {
+	data, err := c.marshal(pl)
 	if err != nil {
 		return err
 	}
@@ -141,7 +156,7 @@ func Generate(c *Config) error {
 				if len(odata) > 0 {
 					// original param list
 					opl := make(paramList, 0)
-					err = unmarshal(odata, &opl, c)
+					err = c.unmarshal(odata, &opl)
 					if err != nil {
 						return err
 					}
@@ -181,7 +196,7 @@ func Generate(c *Config) error {
 						}
 					}
 					sort.Sort(opl)
-					data, err = marshal(opl, c)
+					data, err = c.marshal(opl)
 					if err != nil {
 						return err
 					}
@@ -189,7 +204,7 @@ func Generate(c *Config) error {
 			}
 		}
 		data = unescapeBrackets(data)
-		err = ioutil.WriteFile(c.OutFile, data, 0644)
+		err := ioutil.WriteFile(c.OutFile, data, 0644)
 		if err != nil {
 			return err
 		}
@@ -200,13 +215,8 @@ func Generate(c *Config) error {
 	return nil
 }
 
-func unescapeBrackets(data []byte) []byte {
-	data = bytes.Replace(data, []byte(`\u003c`), []byte(`<`), -1)
-	data = bytes.Replace(data, []byte(`\u003e`), []byte(`>`), -1)
-	return data
-}
-
-func marshal(i interface{}, c *Config) ([]byte, error) {
+// marshal marshals data in either yaml or json
+func (c *Config) marshal(i interface{}) ([]byte, error) {
 	if c.OutYaml {
 		return yaml.Marshal(i)
 	}
@@ -216,13 +226,22 @@ func marshal(i interface{}, c *Config) ([]byte, error) {
 	return json.MarshalIndent(i, "", strings.Repeat(" ", c.Indent))
 }
 
-func unmarshal(data []byte, i interface{}, c *Config) error {
+// unmarshal unmarshals data into i
+func (c *Config) unmarshal(data []byte, i interface{}) error {
 	if c.InYaml {
 		return yaml.Unmarshal(data, i)
 	}
 	return json.Unmarshal(data, i)
 }
 
+// unescapeBrackets replaces the unicode points \u003c and \u003e with plaintext brackets - this is designed to be human readable
+func unescapeBrackets(data []byte) []byte {
+	data = bytes.Replace(data, []byte(`\u003c`), []byte(`<`), -1)
+	data = bytes.Replace(data, []byte(`\u003e`), []byte(`>`), -1)
+	return data
+}
+
+// parameter represents a cloudformation parameter
 type parameter struct {
 	ParameterKey   string
 	ParameterValue string
@@ -233,20 +252,60 @@ type parameter struct {
 	AllowedPattern string        `json:"-"`
 }
 
+// paramList is a slice of type parameter
 type paramList []parameter
 
+// Less implements the sort interface
 func (p paramList) Less(i, j int) bool {
 	return p[i].ParameterKey < p[j].ParameterKey
 }
 
+// Swap implements the sort interface
 func (p paramList) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 
+// Len implements the sort interface
 func (p paramList) Len() int {
 	return len(p)
 }
 
+// RecurseArray converts types to supported types. Specifically interfaces stored in slices or the special case map[interface{}]interface{}
+// yaml supports keys of arbitrary types whereas json does not, so we do this conversion to maintain compatibility between types
+func RecurseArray(k string, slc []interface{}, container interface{}) {
+	nslc := make([]interface{}, 0)
+	for _, i := range slc {
+		var v interface{}
+		switch i := i.(type) {
+		case []interface{}:
+			RecurseArray(k, i, &nslc)
+		case map[interface{}]interface{}:
+			m := make(map[string]interface{})
+			nslc = append(nslc, m)
+			RecurseMapInterface(i, m)
+		default:
+			v = i
+		}
+		if v != nil {
+			nslc = append(nslc, v)
+		}
+	}
+
+	rv := reflect.ValueOf(container)
+	if rv.Kind() == reflect.Ptr {
+		rv = reflect.Indirect(rv)
+	}
+	switch rv.Kind() {
+	case reflect.Slice:
+		*container.(*[]interface{}) = append(*container.(*[]interface{}), nslc)
+	case reflect.Map:
+		m := container.(map[string]interface{})
+		m[k] = nslc
+	}
+}
+
+// RecurseMapInterface converts types to supported types. Specifically interfaces stored in slices or the special case map[interface{}]interface{}
+// yaml supports keys of arbitrary types whereas json does not, so we do this conversion to maintain compatibility between types
 func RecurseMapInterface(m map[interface{}]interface{}, newMap map[string]interface{}) {
 	nm := make(map[string]interface{})
 	for k, v := range m {
@@ -282,36 +341,4 @@ func RecurseMapInterface(m map[interface{}]interface{}, newMap map[string]interf
 		newMap[k] = v
 	}
 
-}
-
-func RecurseArray(k string, slc []interface{}, container interface{}) {
-	nslc := make([]interface{}, 0)
-	for _, i := range slc {
-		var v interface{}
-		switch i := i.(type) {
-		case []interface{}:
-			RecurseArray(k, i, &nslc)
-		case map[interface{}]interface{}:
-			m := make(map[string]interface{})
-			nslc = append(nslc, m)
-			RecurseMapInterface(i, m)
-		default:
-			v = i
-		}
-		if v != nil {
-			nslc = append(nslc, v)
-		}
-	}
-
-	rv := reflect.ValueOf(container)
-	if rv.Kind() == reflect.Ptr {
-		rv = reflect.Indirect(rv)
-	}
-	switch rv.Kind() {
-	case reflect.Slice:
-		*container.(*[]interface{}) = append(*container.(*[]interface{}), nslc)
-	case reflect.Map:
-		m := container.(map[string]interface{})
-		m[k] = nslc
-	}
 }
