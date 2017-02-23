@@ -31,7 +31,7 @@ type Config struct {
 	InYaml                       bool
 }
 
-func Run(c *Config) error {
+func Generate(c *Config) error {
 	flag.Parse()
 
 	if c.InFile == "" {
@@ -74,51 +74,54 @@ func Run(c *Config) error {
 		if !c.Overwrite {
 			odata, err := ioutil.ReadFile(c.OutFile)
 			if err == nil {
-				// original param list
-				opl := make(paramList, 0)
-				err = unmarshal(odata, &opl, c)
-				if err != nil {
-					return err
-				}
-				//new values from template
-				for _, nv := range pl {
-					found := false
-
-					// old values from params file
-					for i, ov := range opl {
-						if nv.ParameterKey == ov.ParameterKey {
-							found = true
-						}
-						if i == len(opl)-1 && !found {
-							opl = append(opl, nv)
-						}
+				// if we have an empty file just write it out
+				if len(odata) > 0 {
+					// original param list
+					opl := make(paramList, 0)
+					err = unmarshal(odata, &opl, c)
+					if err != nil {
+						return err
 					}
-				}
-
-				if c.RemoveOldParamsNotInTemplate {
 					//new values from template
-				outer:
-					for i := 0; i < len(opl); i++ {
+					for _, nv := range pl {
 						found := false
+
 						// old values from params file
-						for _, nv := range pl {
-							if nv.ParameterKey == opl[i].ParameterKey {
+						for i, ov := range opl {
+							if nv.ParameterKey == ov.ParameterKey {
 								found = true
 							}
-						}
-
-						if !found {
-							fmt.Println("Removing value", opl[i])
-							opl = append(opl[:i], opl[i+1:]...)
-							i--
-							continue outer
+							if i == len(opl)-1 && !found {
+								opl = append(opl, nv)
+							}
 						}
 					}
-				}
-				sort.Sort(opl)
-				data, err = marshal(opl, c)
-				if err != nil {
-					return err
+
+					if c.RemoveOldParamsNotInTemplate {
+						//new values from template
+					outer:
+						for i := 0; i < len(opl); i++ {
+							found := false
+							// old values from params file
+							for _, nv := range pl {
+								if nv.ParameterKey == opl[i].ParameterKey {
+									found = true
+								}
+							}
+
+							if !found {
+								fmt.Println("Removing value", opl[i])
+								opl = append(opl[:i], opl[i+1:]...)
+								i--
+								continue outer
+							}
+						}
+					}
+					sort.Sort(opl)
+					data, err = marshal(opl, c)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}

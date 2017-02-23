@@ -55,7 +55,7 @@ Printing output to command line:
     	}
     ]
 
-Saving output to a new file (will overwrite existing)
+Saving output to a new file (will update an existing file or overwrite it if it is blank (0 bytes))
 
     $ cf_parameter_generator -f local_file.json -o /Path/to/output.json
     	

@@ -37,7 +37,7 @@ func config() *cfpgen.Config {
 }
 
 func main() {
-	err := cfpgen.Run(config())
+	err := cfpgen.Generate(config())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(-1)
