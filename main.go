@@ -21,6 +21,11 @@ var (
 	oyaml                        bool
 	inyaml                       bool
 	verbose                      bool
+	printVersion                 bool
+)
+
+const (
+	version = "cf_parameter_generator: v1.9"
 )
 
 func init() {
@@ -33,7 +38,12 @@ func init() {
 	flag.BoolVar(&oyaml, "outyaml", false, "Will output in yaml instead of json.")
 	flag.BoolVar(&inyaml, "inyaml", false, "Will expect input as yaml instead of json.")
 	flag.BoolVar(&verbose, "v", false, "Places verbose output in the ParameterValue field to be replaced.")
+	flag.BoolVar(&printVersion, "version", false, "Print the version and exits.")
 	flag.Parse()
+	if printVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 }
 
 func config() *cfpgen.Config {
