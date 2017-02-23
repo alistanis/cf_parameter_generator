@@ -14,6 +14,8 @@ import (
 
 	"bytes"
 
+	"io"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -36,17 +38,26 @@ type Config struct {
 }
 
 // Generate generates a cloud formation parameters file template and writes either to a file or stdout
-func Generate(c *Config) error {
+func Generate(c *Config, reader io.Reader) error {
 	flag.Parse()
-
-	if c.InFile == "" {
+	var data []byte
+	var err error
+	if reader != nil {
+		data, err = ioutil.ReadAll(reader)
+		if err != nil {
+			return err
+		}
+	}
+	if c.InFile == "" && reader == nil {
 		return ErrMissingInFile
 	}
 
 	m := make(map[string]interface{})
-	data, err := ioutil.ReadFile(c.InFile)
-	if err != nil {
-		return err
+	if data == nil {
+		data, err = ioutil.ReadFile(c.InFile)
+		if err != nil {
+			return err
+		}
 	}
 	err = c.unmarshal(data, &m)
 	if err != nil {

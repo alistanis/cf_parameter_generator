@@ -39,7 +39,7 @@ func config() *cfpgen.Config {
 }
 
 func main() {
-	err := cfpgen.Generate(config())
+	err := cfpgen.Generate(config(), os.Stdin)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		flag.Usage()

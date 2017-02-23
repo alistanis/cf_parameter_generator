@@ -63,6 +63,44 @@ Printing output to command line:
           "ParameterValue": "Type: String"
         }
       ]
+      
+Accept input over stdin:
+      
+      $ cat test.json | cf_parameter_generator
+        [
+          {
+            "ParameterKey": "AccessControl",
+            "ParameterValue": "Type: String"
+          },
+          {
+            "ParameterKey": "ApplicationName",
+            "ParameterValue": "Type: String"
+          },
+          {
+            "ParameterKey": "AssetID",
+            "ParameterValue": "Type: String"
+          },
+          {
+            "ParameterKey": "Environment",
+            "ParameterValue": "Type: String"
+          },
+          {
+            "ParameterKey": "LifecycleConfigurationStatus",
+            "ParameterValue": "Type: String"
+          },
+          {
+            "ParameterKey": "NoncurrentVersionExpirationInDays",
+            "ParameterValue": "Type: Number"
+          },
+          {
+            "ParameterKey": "SubnetIDs",
+            "ParameterValue": "Type: List<AWS::EC2::Subnet::Id>"
+          },
+          {
+            "ParameterKey": "VersioningConfigurationStatus",
+            "ParameterValue": "Type: String"
+          }
+        ]
 
 Saving output to a new file (will update an existing file or overwrite it if it is blank (0 bytes))
 
