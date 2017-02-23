@@ -6,6 +6,8 @@ import (
 
 	"flag"
 
+	"io"
+
 	"github.com/alistanis/cf_parameter_generator/lib"
 )
 
@@ -39,7 +41,15 @@ func config() *cfpgen.Config {
 }
 
 func main() {
-	err := cfpgen.Generate(config(), os.Stdin)
+	var reader io.Reader
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		reader = os.Stdin
+	}
+	err = cfpgen.Generate(config(), reader)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		flag.Usage()
