@@ -72,9 +72,9 @@ func Generate(c *Config) error {
 	return c.ProcessPL(pl)
 }
 
-// GetParamList takes the given config and generates a paramList ([]parameter)
-func (c *Config) GetParamList(params map[string]interface{}) (paramList, error) {
-	pl := make(paramList, 0)
+// GetParamList takes the given config and generates a ParamList ([]Parameter)
+func (c *Config) GetParamList(params map[string]interface{}) (ParamList, error) {
+	pl := make(ParamList, 0)
 
 	for k := range params {
 		m := make(map[string]interface{})
@@ -85,7 +85,7 @@ func (c *Config) GetParamList(params map[string]interface{}) (paramList, error) 
 		case map[string]interface{}:
 			m = val
 		}
-		p := parameter{ParameterKey: k}
+		p := Parameter{ParameterKey: k}
 		for k, v := range m {
 			switch k {
 			case "Default":
@@ -142,8 +142,8 @@ func (c *Config) GetParamList(params map[string]interface{}) (paramList, error) 
 	return pl, nil
 }
 
-// ProcessPL processes a paramList and writes to a file or stdout
-func (c *Config) ProcessPL(pl paramList) error {
+// ProcessPL processes a ParamList and writes to a file or stdout
+func (c *Config) ProcessPL(pl ParamList) error {
 	data, err := c.marshal(pl)
 	if err != nil {
 		return err
@@ -155,7 +155,7 @@ func (c *Config) ProcessPL(pl paramList) error {
 				// if we have an empty file just write it out
 				if len(odata) > 0 {
 					// original param list
-					opl := make(paramList, 0)
+					opl := make(ParamList, 0)
 					err = c.unmarshal(odata, &opl)
 					if err != nil {
 						return err
@@ -241,32 +241,32 @@ func unescapeBrackets(data []byte) []byte {
 	return data
 }
 
-// parameter represents a cloudformation parameter
-type parameter struct {
+// Parameter represents a cloudformation Parameter
+type Parameter struct {
 	ParameterKey   string
 	ParameterValue string
-	Type           string        `json:"-"`
-	Description    string        `json:"-"`
-	AllowedValues  []interface{} `json:"-"`
-	Default        interface{}   `json:"-"`
-	AllowedPattern string        `json:"-"`
+	Type           string        `yaml:"-" json:"-"`
+	Description    string        `yaml:"-" json:"-"`
+	AllowedValues  []interface{} `yaml:"-" json:"-"`
+	Default        interface{}   `yaml:"-" json:"-"`
+	AllowedPattern string        `yaml:"-" json:"-"`
 }
 
-// paramList is a slice of type parameter
-type paramList []parameter
+// ParamList is a slice of type Parameter
+type ParamList []Parameter
 
 // Less implements the sort interface
-func (p paramList) Less(i, j int) bool {
+func (p ParamList) Less(i, j int) bool {
 	return p[i].ParameterKey < p[j].ParameterKey
 }
 
 // Swap implements the sort interface
-func (p paramList) Swap(i, j int) {
+func (p ParamList) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 
 // Len implements the sort interface
-func (p paramList) Len() int {
+func (p ParamList) Len() int {
 	return len(p)
 }
 

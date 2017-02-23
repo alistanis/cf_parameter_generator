@@ -1,24 +1,45 @@
 - parameterkey: AWSAccount
-  parametervalue: ""
-- parameterkey: AccessControl
-  parametervalue: ""
+  parametervalue: 'Type: String'
+  type: String
+  description: Name of the AWS Account
+  allowedvalues:
+  - admints-dev
+  - admints
+  default: admints-dev
+  allowedpattern: ""
 - parameterkey: AmazonEC2FullAccessARN
-  parametervalue: ""
+  parametervalue: 'Type: String'
+  type: String
+  description: The ARN of a policy granting 'full access' rights to EC2
+  allowedvalues: []
+  default: arn:aws:iam::aws:policy/AmazonEC2FullAccess
+  allowedpattern: ""
 - parameterkey: AmazonRoute53FullAccessARN
-  parametervalue: ""
+  parametervalue: 'Type: String'
+  type: String
+  description: The ARN of a policy granting 'full access' rights to Route53
+  allowedvalues: []
+  default: arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+  allowedpattern: ""
 - parameterkey: AppTierFleetSize
-  parametervalue: ""
+  parametervalue: 'Type: Number'
+  type: Number
+  description: App Tier Fleet Size
+  allowedvalues:
+  - 3
+  default: 3
+  allowedpattern: ""
 - parameterkey: AppTierInstanceType
-  parametervalue: ""
-- parameterkey: ApplicationName
-  parametervalue: ""
-- parameterkey: AssetID
-  parametervalue: ""
-- parameterkey: Environment
-  parametervalue: ""
-- parameterkey: LifecycleConfigurationStatus
-  parametervalue: ""
-- parameterkey: NoncurrentVersionExpirationInDays
-  parametervalue: ""
-- parameterkey: VersioningConfigurationStatus
-  parametervalue: ""
+  parametervalue: 'Type: String'
+  type: String
+  description: 'App tier instance type.  NOTE: use t2.medium for stack testing only.'
+  allowedvalues:
+  - t2.medium
+  - t2.large
+  - m4.large
+  - m4.xlarge
+  - m4.2xlarge
+  - m4.4xlarge
+  - m4.8xlarge
+  default: m4.large
+  allowedpattern: ""

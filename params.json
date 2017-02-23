@@ -1,38 +1,38 @@
 [
   {
     "ParameterKey": "AccessControl",
-    "ParameterValue": "Private"
+    "ParameterValue": "Type: String"
   },
   {
     "ParameterKey": "ApplicationName",
-    "ParameterValue": ""
+    "ParameterValue": "Type: String"
   },
   {
     "ParameterKey": "AssetID",
-    "ParameterValue": ""
+    "ParameterValue": "Type: String"
   },
   {
     "ParameterKey": "Environment",
-    "ParameterValue": ""
+    "ParameterValue": "Type: String"
+  },
+  {
+    "ParameterKey": "InstanceIDs",
+    "ParameterValue": "Type: List<AWS::EC2::Instance::Id>"
   },
   {
     "ParameterKey": "LifecycleConfigurationStatus",
-    "ParameterValue": ""
+    "ParameterValue": "Type: String"
   },
   {
     "ParameterKey": "NoncurrentVersionExpirationInDays",
-    "ParameterValue": ""
+    "ParameterValue": "Type: Number"
   },
   {
     "ParameterKey": "SubnetIDs",
-    "ParameterValue": "Type: List<AWS::EC2::Subnet::Id>, Description: Subnet IDs"
-  },
-  {
-    "ParameterKey": "TestExtraParam",
-    "ParameterValue": ""
+    "ParameterValue": "Type: List<AWS::EC2::Subnet::Id>"
   },
   {
     "ParameterKey": "VersioningConfigurationStatus",
-    "ParameterValue": ""
+    "ParameterValue": "Type: String"
   }
 ]
