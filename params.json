@@ -16,10 +16,6 @@
     "ParameterValue": "Type: String"
   },
   {
-    "ParameterKey": "InstanceIDs",
-    "ParameterValue": "Type: List<AWS::EC2::Instance::Id>"
-  },
-  {
     "ParameterKey": "LifecycleConfigurationStatus",
     "ParameterValue": "Type: String"
   },

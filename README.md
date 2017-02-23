@@ -227,6 +227,48 @@ Overwrite Parameters File:
         "ParameterValue": "Type: String"
       }
     ]
+   
+Remove InstanceIDs from template and run again with -r:
+    
+    $ cf_parameter_generator -f test.json -o params.json -r
+      Removing value {InstanceIDs Type: List<AWS::EC2::Instance::Id>   [] <nil> }
+
+File contents after removal:
+    
+    [
+      {
+        "ParameterKey": "AccessControl",
+        "ParameterValue": "Type: String"
+      },
+      {
+        "ParameterKey": "ApplicationName",
+        "ParameterValue": "Type: String"
+      },
+      {
+        "ParameterKey": "AssetID",
+        "ParameterValue": "Type: String"
+      },
+      {
+        "ParameterKey": "Environment",
+        "ParameterValue": "Type: String"
+      },
+      {
+        "ParameterKey": "LifecycleConfigurationStatus",
+        "ParameterValue": "Type: String"
+      },
+      {
+        "ParameterKey": "NoncurrentVersionExpirationInDays",
+        "ParameterValue": "Type: Number"
+      },
+      {
+        "ParameterKey": "SubnetIDs",
+        "ParameterValue": "Type: List<AWS::EC2::Subnet::Id>"
+      },
+      {
+        "ParameterKey": "VersioningConfigurationStatus",
+        "ParameterValue": "Type: String"
+      }
+    ]  
     	
 Print Verbose Output:
     	
