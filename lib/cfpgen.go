@@ -12,6 +12,8 @@ import (
 
 	"reflect"
 
+	"bytes"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -29,8 +31,10 @@ type Config struct {
 	RemoveOldParamsNotInTemplate bool
 	OutYaml                      bool
 	InYaml                       bool
+	Verbose                      bool
 }
 
+// TODO - refactor this into smaller functions
 func Generate(c *Config) error {
 	flag.Parse()
 
@@ -61,8 +65,67 @@ func Generate(c *Config) error {
 	pl := make(paramList, 0)
 
 	for k := range params {
+		m := make(map[string]interface{})
+		v := params[k]
+		switch val := v.(type) {
+		case map[interface{}]interface{}:
+			RecurseMapInterface(val, m)
+		case map[string]interface{}:
+			m = val
+		}
 		p := parameter{ParameterKey: k}
+		for k, v := range m {
+			switch k {
+			case "Default":
+				p.Default = v
+			case "AllowedValues":
+				v, ok := v.([]interface{})
+				if ok {
+					p.AllowedValues = v
+				} else {
+					return errors.New("AllowedValues was not an []interface{}")
+				}
+			case "Description":
+				if s, ok := v.(string); ok {
+					p.Description = s
+				} else {
+					return errors.New("Description was not a string")
+				}
+			case "Type":
+				if s, ok := v.(string); ok {
+					p.Type = s
+				} else {
+					return errors.New("Type was not a string")
+				}
+			case "AllowedPattern":
+				if s, ok := v.(string); ok {
+					p.AllowedPattern = s
+				} else {
+					return errors.New("AllowedPattern was not a string")
+				}
+			}
+		}
 		pl = append(pl, p)
+	}
+
+	for i := range pl {
+		var s string
+		s = fmt.Sprintf("Type: %s", pl[i].Type)
+		if c.Verbose {
+			if pl[i].Default != nil {
+				s += fmt.Sprintf(", Default: %v", pl[i].Default)
+			}
+			if pl[i].AllowedValues != nil {
+				s += fmt.Sprintf(", AllowedValues: %v", pl[i].AllowedValues)
+			}
+			if pl[i].AllowedPattern != "" {
+				s += fmt.Sprintf(", AllowedPattern: %s", pl[i].AllowedPattern)
+			}
+			if pl[i].Description != "" {
+				s += fmt.Sprintf(", Description: %s", pl[i].Description)
+			}
+		}
+		pl[i].ParameterValue = s
 	}
 
 	sort.Sort(pl)
@@ -125,15 +188,22 @@ func Generate(c *Config) error {
 				}
 			}
 		}
-
+		data = unescapeBrackets(data)
 		err = ioutil.WriteFile(c.OutFile, data, 0644)
 		if err != nil {
 			return err
 		}
 	} else {
+		data = unescapeBrackets(data)
 		fmt.Print(string(data))
 	}
 	return nil
+}
+
+func unescapeBrackets(data []byte) []byte {
+	data = bytes.Replace(data, []byte(`\u003c`), []byte(`<`), -1)
+	data = bytes.Replace(data, []byte(`\u003e`), []byte(`>`), -1)
+	return data
 }
 
 func marshal(i interface{}, c *Config) ([]byte, error) {
@@ -156,6 +226,11 @@ func unmarshal(data []byte, i interface{}, c *Config) error {
 type parameter struct {
 	ParameterKey   string
 	ParameterValue string
+	Type           string        `json:"-"`
+	Description    string        `json:"-"`
+	AllowedValues  []interface{} `json:"-"`
+	Default        interface{}   `json:"-"`
+	AllowedPattern string        `json:"-"`
 }
 
 type paramList []parameter

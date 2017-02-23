@@ -18,6 +18,7 @@ var (
 	removeOldParamsNotInTemplate bool
 	oyaml                        bool
 	inyaml                       bool
+	verbose                      bool
 )
 
 func init() {
@@ -29,11 +30,12 @@ func init() {
 	flag.BoolVar(&removeOldParamsNotInTemplate, "r", false, "Removes old entries from parameters found in old parameters files.")
 	flag.BoolVar(&oyaml, "outyaml", false, "Will output in yaml instead of json.")
 	flag.BoolVar(&inyaml, "inyaml", false, "Will expect input as yaml instead of json.")
+	flag.BoolVar(&verbose, "v", false, "Places verbose output in the ParameterValue field to be replaced.")
 	flag.Parse()
 }
 
 func config() *cfpgen.Config {
-	return &cfpgen.Config{InFile: inFile, OutFile: outFile, Minimize: min, Indent: numIndentSpaces, Overwrite: overwrite, RemoveOldParamsNotInTemplate: removeOldParamsNotInTemplate, OutYaml: oyaml, InYaml: inyaml}
+	return &cfpgen.Config{InFile: inFile, OutFile: outFile, Minimize: min, Indent: numIndentSpaces, Overwrite: overwrite, RemoveOldParamsNotInTemplate: removeOldParamsNotInTemplate, OutYaml: oyaml, InYaml: inyaml, Verbose: verbose}
 }
 
 func main() {

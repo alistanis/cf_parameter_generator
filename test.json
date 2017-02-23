@@ -35,6 +35,10 @@
         "Disabled"
       ]
     },
+    "SubnetIDs" : {
+      "Description" : "Subnet IDs",
+      "Type" : "List<AWS::EC2::Subnet::Id>"
+    },
     "NoncurrentVersionExpirationInDays": {
       "Type": "Number",
       "Description": "For buckets with versioning enabled (or suspended), specifies the time, in days, between when a new version of the object is uploaded to the bucket and when old versions of the object expire. When object versions expire, Amazon S3 permanently deletes them. If you specify a transition and expiration time, the expiration time must be later than the transition time.",

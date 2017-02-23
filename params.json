@@ -24,6 +24,10 @@
     "ParameterValue": ""
   },
   {
+    "ParameterKey": "SubnetIDs",
+    "ParameterValue": "Type: List<AWS::EC2::Subnet::Id>, Description: Subnet IDs"
+  },
+  {
     "ParameterKey": "TestExtraParam",
     "ParameterValue": ""
   },
