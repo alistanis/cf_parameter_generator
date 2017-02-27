@@ -30,7 +30,10 @@ Usage
 
 Printing output to command line:
 
+
     $ cf_parameter_generator -f test.json
+
+```json
       [
         {
           "ParameterKey": "AccessControl",
@@ -65,10 +68,13 @@ Printing output to command line:
           "ParameterValue": "Type: String"
         }
       ]
+```      
       
 Accept input over stdin:
-      
+
       $ cat test.json | cf_parameter_generator
+      
+```json
         [
           {
             "ParameterKey": "AccessControl",
@@ -103,13 +109,14 @@ Accept input over stdin:
             "ParameterValue": "Type: String"
           }
         ]
-
+```
 Saving output to a new file (will update an existing file or overwrite it if it is blank (0 bytes))
 
     $ cf_parameter_generator -f test.json -o params.json
     
 Contents of file:
 
+```json
     [
       {
         "ParameterKey": "AccessControl",
@@ -144,9 +151,11 @@ Contents of file:
         "ParameterValue": "Type: String"
       }
     ]
+```
 
 Edit contents of file with real parameters:
 
+```json
     [
       {
         "ParameterKey": "AccessControl",
@@ -181,6 +190,7 @@ Edit contents of file with real parameters:
         "ParameterValue": "Enabled"
       }
     ]
+```
     
 Add a new Parameter to a template called InstanceIDS and run cf_parameter_generator again:
 
@@ -188,6 +198,7 @@ Add a new Parameter to a template called InstanceIDS and run cf_parameter_genera
     
 New File Contents:
     	
+```json
     [
       {
         "ParameterKey": "AccessControl",
@@ -226,10 +237,13 @@ New File Contents:
         "ParameterValue": "Enabled"
       }
     ]
+```
 
 Overwrite Parameters File:
     
     $ cf_parameter_generator -f test.json -o params.json -overwrite    	
+
+```json
     [
       {
         "ParameterKey": "AccessControl",
@@ -268,7 +282,8 @@ Overwrite Parameters File:
         "ParameterValue": "Type: String"
       }
     ]
-   
+``` 
+  
 Remove InstanceIDs from template and run again with -r:
     
     $ cf_parameter_generator -f test.json -o params.json -r
@@ -276,6 +291,7 @@ Remove InstanceIDs from template and run again with -r:
 
 File contents after removal:
     
+```json
     [
       {
         "ParameterKey": "AccessControl",
@@ -310,10 +326,13 @@ File contents after removal:
         "ParameterValue": "Type: String"
       }
     ]  
-    	
+```
+    
 Print Verbose Output:
     	
     $ cf_parameter_generator -f test.json -v
+
+```json
     [
       {
         "ParameterKey": "AccessControl",
@@ -352,10 +371,14 @@ Print Verbose Output:
         "ParameterValue": "Type: String, Default: Enabled, AllowedValues: [Enabled Suspended], Description: Whether or not to enable versioning on this bucket"
       }
     ]	
+```
     
 Read in yaml and output yaml:
 
+
     $ cf_parameter_generator -f test.yaml -inyaml -outyaml
+
+```yaml
       - parameterkey: AWSAccount
         parametervalue: 'Type: String'
       - parameterkey: AmazonEC2FullAccessARN
@@ -366,10 +389,13 @@ Read in yaml and output yaml:
         parametervalue: 'Type: Number'
       - parameterkey: AppTierInstanceType
         parametervalue: 'Type: String'
+```
 
 Verbose yaml:
     
     $ cf_parameter_generator -f test.yaml -inyaml -outyaml -v
+
+```yaml
       - parameterkey: AWSAccount
         parametervalue: 'Type: String, Default: admints-dev, AllowedValues: [admints-dev
           admints], Description: Name of the AWS Account'
@@ -386,10 +412,13 @@ Verbose yaml:
         parametervalue: 'Type: String, Default: m4.large, AllowedValues: [t2.medium t2.large
           m4.large m4.xlarge m4.2xlarge m4.4xlarge m4.8xlarge], Description: App tier instance
           type.  NOTE: use t2.medium for stack testing only.'
+```
          
 Read in json and output yaml:
     
     $ cf_parameter_generator -f test.json -outyaml
+
+```yaml
       - parameterkey: AccessControl
         parametervalue: 'Type: String'
       - parameterkey: ApplicationName
@@ -408,10 +437,13 @@ Read in json and output yaml:
         parametervalue: 'Type: List<AWS::EC2::Subnet::Id>'
       - parameterkey: VersioningConfigurationStatus
         parametervalue: 'Type: String'                    
-        
+``` 
+       
 Read in yaml and output json:
         
     $ cf_parameter_generator -inyaml -f test.yaml
+
+```json
     [
       {
         "ParameterKey": "AWSAccount",
@@ -433,4 +465,5 @@ Read in yaml and output json:
         "ParameterKey": "AppTierInstanceType",
         "ParameterValue": "Type: String"
       }
-    ]    
+    ]
+```        
